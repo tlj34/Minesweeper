@@ -5,7 +5,7 @@
 
 运行方法：clone到本地后使用make编译，然后运行生成的mine.exe
 ```
-git clone git@github.com:tlj34/Minesweeper.git
+git clone https://github.com/tlj34/Minesweeper.git
 cd Minesweeper
 make
 ./mine.exe
