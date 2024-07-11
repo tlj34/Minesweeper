@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <conio.h>
+#include <ctype.h>
 #include <stdio.h>
 #include <time.h>
 #undef main
@@ -99,7 +100,7 @@ void dig(int n) { //挖掘
 void game() { //游戏主体
 	bool step1, cheats;
 	time_t startTime;
-	char code[6] ="xyzzy";
+	char code[6] = "xyzzy"; //作弊码
 	int tmp;
 	SDL_Event event;
 	SDL_Rect scr, dst;
@@ -181,7 +182,7 @@ start:
 						if (adjoin(current, current + d[i])) dig(current + d[i]);
 			}
 		} else if (SDL_KEYDOWN == event.type) { //核对作弊码
-			if (event.key.keysym.sym == code[tmp]) cheats = (cheats + (tmp == 4)) % 2, tmp += tmp < 4 ? 1 : -4;
+			if (tolower(event.key.keysym.sym) == code[tmp]) cheats = (cheats + (tmp == 4)) % 2, tmp += tmp < 4 ? 1 : -4;
 			else tmp = 0;
 		}
 
@@ -226,18 +227,20 @@ end:
 }
 
 int main() {
-	srand((unsigned int)time(0));
+	SetConsoleCursorInfo(GetStdHandle(STD_OUTPUT_HANDLE), &(CONSOLE_CURSOR_INFO){1, 0}); //隐藏光标
+	srand((unsigned int)time(NULL));
 	SDL_Init(SDL_INIT_VIDEO);
+	
+	//获取图像
 	picA = SDL_LoadBMP("./pics/A.bmp");
 	picB = SDL_LoadBMP("./pics/B.bmp");
 	picC = SDL_LoadBMP("./pics/C.bmp");
 	picD = SDL_LoadBMP("./pics/D.bmp");
-	FILE *fp = fopen("record.txt", "r");
 
+	//获取记录
+	FILE *fp = fopen("record.txt", "r");
 	if (fp) fscanf(fp, "%d\n%d\n%d", &record[0], &record[1], &record[2]);
 	else record[0] = record[1] = record[2] = 999;
-	
-	SetConsoleCursorInfo(GetStdHandle(STD_OUTPUT_HANDLE), &(CONSOLE_CURSOR_INFO){1, 0});
 	
 	while (1) {
 		//打印游戏菜单
@@ -252,7 +255,7 @@ int main() {
 		MOVE_CURSOR(15, mode),	putchar(']');
 		char ch = getch();
 		
-		if (ch == 'z' || ch == ' ' || ch == 13) {
+		if (ch == 'z' || ch == 'Z' || ch == ' ' || ch == 13) {
 			if (mode == 4) break;
 			else if (mode == 0) width = height = 9, mines = 10;
 			else if (mode == 1) width = height = 16, mines = 40;
@@ -273,10 +276,8 @@ int main() {
 			}
 
 			//初始化方向数组、分配内存、创建窗口并开始游戏
-			d[0] = -width - 1, d[1] = -width, d[2] = -width + 1, d[3] = -1, d[4] = 1,
-				d[5] = width - 1, d[6] = width, d[7] = width + 1;
-			mp0 = (char*)malloc(width * height);
-			mp1 = (char*)malloc(width * height);
+			d[0] = -width - 1, d[1] = -width, d[2] = -width + 1, d[3] = -1, d[4] = 1, d[5] = width - 1, d[6] = width, d[7] = width + 1;
+			mp0 = (char*)malloc(width * height), mp1 = (char*)malloc(width * height);
 			window = SDL_CreateWindow("mine", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width * 20, height * 20 + 30, SDL_WINDOW_SHOWN);
 			render = SDL_CreateRenderer(window, -1, 0);
 			game();
@@ -285,7 +286,7 @@ int main() {
 			free(mp0), free(mp1);
 			SDL_DestroyWindow(window);
 			SDL_Quit();
-		} else if (ch == 'x') mode = 4;
+		} else if (ch == 'x' || ch == 'X') mode = 4;
 		else if (ch == 72) --mode;
 		else if (ch == 80) ++mode;
 
