@@ -8,7 +8,7 @@
 #include <time.h>
 #undef main
 #define MIN(a, b) (a) > (b) ? (b) : (a)
-#define MOVE_CURSOR(x, y) SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), (COORD) {(x), (y)})
+#define MOVE_CURSOR(x, y) SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), (COORD) {(x), (y)}) /*移动光标*/
 
 const char chmap[11] = " 12345678@";
 char *mp0, *mp1;
@@ -17,12 +17,12 @@ SDL_Window *window;
 SDL_Renderer *render;
 SDL_Surface *picA, *picB, *picC, *picD;
 
-int adjoin(int p1, int p2) {
+int adjoin(int p1, int p2) { //判断两点是否临接
 	if (p1 < 0 || p2 < 0 || p1 >= width * height || p2 >= width * height) return 0;
 	return (abs((p1 % width) - (p2 % width)) < 2 && abs(p1 / width - p2 / width) < 2);
 }
 
-int print_map() {
+int print_map() { //打印地图
 	SDL_Texture *texA = SDL_CreateTextureFromSurface(render, picA);
 	SDL_Texture *texB = SDL_CreateTextureFromSurface(render, picB);
 	SDL_Rect scr, dst;
@@ -96,7 +96,7 @@ void dig(int n) { //挖掘
 	if (mp1[n] == ' ') for (int i = 0; i < 8; ++i) if (adjoin(n, n + d[i])) dig(n + d[i]);
 }
 
-void game() {
+void game() { //游戏主体
 	bool step1, cheats;
 	time_t startTime;
 	char code[6] ="xyzzy";
@@ -180,11 +180,12 @@ start:
 					for (int i = 0; i < 8; ++i)
 						if (adjoin(current, current + d[i])) dig(current + d[i]);
 			}
-		} else if (SDL_KEYDOWN == event.type) {
+		} else if (SDL_KEYDOWN == event.type) { //核对作弊码
 			if (event.key.keysym.sym == code[tmp]) cheats = (cheats + (tmp == 4)) % 2, tmp += tmp < 4 ? 1 : -4;
 			else tmp = 0;
 		}
 
+		//处理作弊模式
 		MOVE_CURSOR(0, 0);
 		if (cheats && mp0[current] == 9) putchar('.');
 		else if (tmp) putchar('*');
@@ -239,6 +240,7 @@ int main() {
 	SetConsoleCursorInfo(GetStdHandle(STD_OUTPUT_HANDLE), &(CONSOLE_CURSOR_INFO){1, 0});
 	
 	while (1) {
+		//打印游戏菜单
 		MOVE_CURSOR(0, 0);
 		system("cls");
 		printf("    Beginner        record: %d\n", record[0]);
@@ -270,14 +272,16 @@ int main() {
 				if (mines >= width * height) mines = width * height - 1;
 			}
 
+			//初始化方向数组、分配内存、创建窗口并开始游戏
 			d[0] = -width - 1, d[1] = -width, d[2] = -width + 1, d[3] = -1, d[4] = 1,
 				d[5] = width - 1, d[6] = width, d[7] = width + 1;
 			mp0 = (char*)malloc(width * height);
 			mp1 = (char*)malloc(width * height);
-			SDL_Init(SDL_INIT_VIDEO);
 			window = SDL_CreateWindow("mine", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width * 20, height * 20 + 30, SDL_WINDOW_SHOWN);
 			render = SDL_CreateRenderer(window, -1, 0);
 			game();
+
+			//释放内存并关闭窗口
 			free(mp0), free(mp1);
 			SDL_DestroyWindow(window);
 			SDL_Quit();
@@ -288,6 +292,7 @@ int main() {
 		mode = (mode + 5) % 5;
 	}
 	
+	//将记录写入文本中
 	fp = fopen("record.txt", "w");
 	fprintf(fp, "%d\n%d\n%d", record[0], record[1], record[2]);
 	fclose(fp);
